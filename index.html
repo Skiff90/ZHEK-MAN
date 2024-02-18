@@ -4,11 +4,177 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pac-Man Game with Coins and Ghosts</title>
-    <link rel="stylesheet" href="css/style.css" />
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background-color: #3498db; /* Синий фон */
+      }
+
+      canvas {
+        display: block;
+      }
+    </style>
   </head>
   <body>
-    <canvas id="pacmanCanvas" width="auto" height="auto"></canvas>
+    <canvas id="pacmanCanvas" width="1920" height="1080"></canvas>
 
-    <script type="module" src="js/script.js"></script>
+    <script>
+      const canvas = document.getElementById("pacmanCanvas");
+      const ctx = canvas.getContext("2d");
+
+      const pacMan = {
+        x: 50,
+        y: 50,
+        radius: 20,
+        startAngle: 0.2,
+        endAngle: 1.8,
+        color: "yellow",
+        speed: 3,
+        direction: "right",
+      };
+
+      const ghosts = [];
+      const ghostRadius = 15;
+      const coins = [];
+      const coinRadius = 5;
+      let score = 0;
+      let gameOver = false;
+
+      function drawPacMan() {
+        ctx.beginPath();
+        ctx.arc(
+          pacMan.x,
+          pacMan.y,
+          pacMan.radius,
+          pacMan.startAngle * Math.PI,
+          pacMan.endAngle * Math.PI
+        );
+        ctx.lineTo(pacMan.x, pacMan.y);
+        ctx.fillStyle = pacMan.color;
+        ctx.fill();
+        ctx.closePath();
+      }
+
+      function drawGhosts() {
+        ctx.fillStyle = "red";
+        ghosts.forEach((ghost, index) => {
+          ctx.beginPath();
+          ctx.arc(ghost.x, ghost.y, ghostRadius, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.closePath();
+
+          const angle = Math.atan2(pacMan.y - ghost.y, pacMan.x - ghost.x);
+          ghost.x += Math.cos(angle) * ghost.speed;
+          ghost.y += Math.sin(angle) * ghost.speed;
+
+          const distance = Math.sqrt(
+            (pacMan.x - ghost.x) / 2 + (pacMan.y - ghost.y) / 2
+          );
+          if (distance < pacMan.radius + ghostRadius) {
+            gameOver = true;
+          }
+        });
+      }
+
+      function drawCoins() {
+        ctx.fillStyle = "gold";
+        coins.forEach((coin, index) => {
+          ctx.beginPath();
+          ctx.arc(coin.x, coin.y, coinRadius, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.closePath();
+
+          const distance = Math.sqrt(
+            (pacMan.x - coin.x) / 2 + (pacMan.y - coin.y) / 2
+          );
+          if (distance < pacMan.radius + coinRadius) {
+            coins.splice(index, 1);
+            score++;
+          }
+        });
+      }
+
+      function drawScore() {
+        ctx.fillStyle = "black";
+        ctx.font = "20px Arial";
+        ctx.fillText("Score: " + score, 10, 30);
+      }
+
+      function drawGameOver() {
+        ctx.fillStyle = "red";
+        ctx.font = "40px Arial";
+        ctx.fillText("Game Over", canvas.width / 2 - 100, canvas.height / 2);
+      }
+
+      function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      function update() {
+        if (gameOver) {
+          clearCanvas();
+          drawGameOver();
+          return;
+        }
+
+        clearCanvas();
+
+        if (pacMan.direction === "right") {
+          pacMan.x += pacMan.speed;
+        } else if (pacMan.direction === "left") {
+          pacMan.x -= pacMan.speed;
+        } else if (pacMan.direction === "up") {
+          pacMan.y -= pacMan.speed;
+        } else if (pacMan.direction === "down") {
+          pacMan.y += pacMan.speed;
+        }
+
+        drawPacMan();
+        drawGhosts();
+        drawCoins();
+        drawScore();
+
+        requestAnimationFrame(update);
+      }
+
+      function spawnCoin() {
+        const coin = {
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+        };
+        coins.push(coin);
+      }
+
+      function spawnGhost() {
+        const ghost = {
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          speed: 1,
+        };
+        ghosts.push(ghost);
+      }
+
+      setInterval(spawnCoin, 3000);
+      setInterval(spawnGhost, 5000);
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "ArrowRight") {
+          pacMan.direction = "right";
+          pacMan.speed = 3;
+        } else if (event.key === "ArrowLeft") {
+          pacMan.direction = "left";
+          pacMan.speed = 3;
+        } else if (event.key === "ArrowUp") {
+          pacMan.direction = "up";
+          pacMan.speed = 3;
+        } else if (event.key === "ArrowDown") {
+          pacMan.direction = "down";
+          pacMan.speed = 3;
+        }
+      });
+
+      update();
+    </script>
   </body>
 </html>
